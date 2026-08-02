@@ -99,7 +99,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="hero">
-        <p className="eyebrow">Jardim de Desejos · versão 2.1</p>
+        <p className="eyebrow">Jardim de Desejos · versão 2.2</p>
         <h1>O Jardim de Desejos de Michèlé Joohann</h1>
         <p>Sonhos cultivados com carinho, significado e história.</p>
         <div className="hero-stats">
