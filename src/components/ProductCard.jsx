@@ -1,5 +1,14 @@
 export default function ProductCard({ product }) {
-  const statusLabel = product.status === 'reserved' ? 'Reservado' : product.status === 'received' ? 'Realizado' : 'Disponível';
+  const quantityDesired = Number(product.quantityDesired || 1);
+  const quantityReceived = Number(product.quantityReceived || 0);
+  const isComplete = quantityDesired > 1 && quantityReceived >= quantityDesired;
+  const statusLabel = isComplete
+    ? 'Floresceu'
+    : product.status === 'reserved'
+      ? 'Reservado'
+      : product.status === 'received'
+        ? 'Realizado'
+        : 'Disponível';
   const imageUrl = product.imageUrl || product.image;
   const meanings = Array.isArray(product.meanings) ? product.meanings : [];
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
@@ -12,7 +21,7 @@ export default function ProductCard({ product }) {
         ) : (
           <span className="product-icon" aria-hidden="true">{product.icon || '🌿'}</span>
         )}
-        <span className={`status-badge status-${product.status || 'available'}`}>{statusLabel}</span>
+        <span className={`status-badge status-${isComplete ? 'received' : (product.status || 'available')}`}>{statusLabel}</span>
       </div>
 
       <div className="product-body">
@@ -38,6 +47,16 @@ export default function ProductCard({ product }) {
 
         {sizes.length > 0 && (
           <p className="product-meta"><strong>Tamanho desejado:</strong> {sizes.join(', ')}</p>
+        )}
+
+        {quantityDesired > 1 && (
+          <div className="quantity-progress" aria-label={`${quantityReceived} de ${quantityDesired} recebidos`}>
+            <div className="quantity-progress__text">
+              <strong>🌱 {quantityReceived} de {quantityDesired} recebidos</strong>
+              <span>{isComplete ? 'Este sonho floresceu 🌸' : `Ainda podem florescer ${Math.max(quantityDesired - quantityReceived, 0)}`}</span>
+            </div>
+            <progress value={Math.min(quantityReceived, quantityDesired)} max={quantityDesired} />
+          </div>
         )}
 
         {product.story && (
