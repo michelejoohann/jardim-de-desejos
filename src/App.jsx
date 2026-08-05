@@ -4,7 +4,7 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { auth, db } from './firebase/config.js';
 import ProductCard from './components/ProductCard.jsx';
 import AdminMigrationPanel from './components/AdminMigrationPanel.jsx';
-import { legacyProducts } from './data/legacyProducts.js';
+import { gardenProducts } from './data/catalog.js';
 
 const categoryLabels = {
   casa: '🏡 Casa',
@@ -14,6 +14,7 @@ const categoryLabels = {
   tecnologia: '💻 Tecnologia',
   arte: '🎨 Arte e espiritualidade',
   jardim: '🌳 Jardim externo',
+  pets: '🐾 Pets',
 };
 
 function labelFromValue(value) {
@@ -21,6 +22,14 @@ function labelFromValue(value) {
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+}
+
+function mergeCatalogWithFirestore(catalog, firestoreProducts) {
+  const firestoreById = new Map(firestoreProducts.map(product => [product.id, product]));
+  const merged = catalog.map(product => ({ ...product, ...(firestoreById.get(product.id) || {}) }));
+  const catalogIds = new Set(catalog.map(product => product.id));
+  const onlyInFirestore = firestoreProducts.filter(product => !catalogIds.has(product.id));
+  return [...merged, ...onlyInFirestore];
 }
 
 export default function App() {
@@ -49,7 +58,7 @@ export default function App() {
         setLoading(false);
       },
       () => {
-        setError('O Firestore ainda não pôde ser consultado. O catálogo de segurança foi carregado.');
+        setError('O Firestore ainda não pôde ser consultado. O catálogo oficial local foi carregado.');
         setLoading(false);
       }
     );
@@ -60,7 +69,11 @@ export default function App() {
     };
   }, []);
 
-  const sourceProducts = firestoreProducts.length ? firestoreProducts : legacyProducts;
+  const sourceProducts = useMemo(
+    () => mergeCatalogWithFirestore(gardenProducts, firestoreProducts),
+    [firestoreProducts]
+  );
+
   const usingFallback = !loading && !firestoreProducts.length;
 
   const availableCategories = useMemo(
@@ -99,13 +112,13 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="hero">
-        <p className="eyebrow">Jardim de Desejos · versão 2.2</p>
+        <p className="eyebrow">Jardim de Desejos · versão 2.3</p>
         <h1>O Jardim de Desejos de Michèlé Joohann</h1>
         <p>Sonhos cultivados com carinho, significado e história.</p>
         <div className="hero-stats">
           <span>{sourceProducts.length} desejos no jardim</span>
           <span>{visibleProducts.length} exibidos</span>
-          <span>{firestoreProducts.length ? 'Sincronizado com Firestore' : 'Catálogo de segurança ativo'}</span>
+          <span>{firestoreProducts.length ? 'Catálogo oficial + Firestore' : 'Catálogo oficial ativo'}</span>
         </div>
       </header>
 
@@ -141,7 +154,7 @@ export default function App() {
         </section>
 
         {loading && <p className="notice">Conectando ao Jardim…</p>}
-        {usingFallback && <p className="notice warning">O banco ainda está vazio. Entre como administradora acima e execute a importação inicial.</p>}
+        {usingFallback && <p className="notice warning">O Firestore está vazio ou indisponível. O catálogo oficial continua visível normalmente.</p>}
         {error && <p className="notice error" role="alert">{error}</p>}
 
         <section className="product-grid" aria-live="polite">
