@@ -4,7 +4,7 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { auth, db } from './firebase/config.js';
 import ProductCard from './components/ProductCard.jsx';
 import AdminMigrationPanel from './components/AdminMigrationPanel.jsx';
-import { gardenProducts } from './data/catalog.js';
+import { officialGardenProducts } from './data/officialCatalog.js';
 
 const categoryLabels = {
   casa: '🏡 Casa',
@@ -26,7 +26,15 @@ function labelFromValue(value) {
 
 function mergeCatalogWithFirestore(catalog, firestoreProducts) {
   const firestoreById = new Map(firestoreProducts.map(product => [product.id, product]));
-  const merged = catalog.map(product => ({ ...product, ...(firestoreById.get(product.id) || {}) }));
+  const merged = catalog.map(product => {
+    const firestoreProduct = firestoreById.get(product.id) || {};
+    return {
+      ...firestoreProduct,
+      ...product,
+      quantityReceived: firestoreProduct.quantityReceived ?? product.quantityReceived,
+      status: firestoreProduct.status ?? product.status,
+    };
+  });
   const catalogIds = new Set(catalog.map(product => product.id));
   const onlyInFirestore = firestoreProducts.filter(product => !catalogIds.has(product.id));
   return [...merged, ...onlyInFirestore];
@@ -70,7 +78,7 @@ export default function App() {
   }, []);
 
   const sourceProducts = useMemo(
-    () => mergeCatalogWithFirestore(gardenProducts, firestoreProducts),
+    () => mergeCatalogWithFirestore(officialGardenProducts, firestoreProducts),
     [firestoreProducts]
   );
 
