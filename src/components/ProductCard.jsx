@@ -1,3 +1,18 @@
+import { useEffect, useMemo, useState } from 'react';
+
+function getProxiedImageUrl(url) {
+  if (!url || url.startsWith('data:') || url.startsWith('/')) return url;
+
+  try {
+    const hostname = new URL(url).hostname;
+    const shouldProxy = hostname.includes('ibyteimg.com') || hostname === 'm.media-amazon.com';
+    if (!shouldProxy) return url;
+    return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=900&output=webp&q=85`;
+  } catch {
+    return url;
+  }
+}
+
 export default function ProductCard({ product }) {
   const quantityDesired = Number(product.quantityDesired || 1);
   const quantityReceived = Number(product.quantityReceived || 0);
@@ -10,14 +25,36 @@ export default function ProductCard({ product }) {
         ? 'Realizado'
         : 'Disponível';
   const imageUrl = product.imageUrl || product.image;
+  const proxiedImageUrl = useMemo(() => getProxiedImageUrl(imageUrl), [imageUrl]);
+  const [currentImageUrl, setCurrentImageUrl] = useState(proxiedImageUrl);
+  const [imageFailed, setImageFailed] = useState(false);
   const meanings = Array.isArray(product.meanings) ? product.meanings : [];
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+
+  useEffect(() => {
+    setCurrentImageUrl(proxiedImageUrl);
+    setImageFailed(false);
+  }, [proxiedImageUrl]);
+
+  function handleImageError() {
+    if (currentImageUrl !== imageUrl && imageUrl) {
+      setCurrentImageUrl(imageUrl);
+      return;
+    }
+    setImageFailed(true);
+  }
 
   return (
     <article className="product-card">
       <div className="product-media">
-        {imageUrl ? (
-          <img src={imageUrl} alt={product.name} loading="lazy" />
+        {currentImageUrl && !imageFailed ? (
+          <img
+            src={currentImageUrl}
+            alt={product.name}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={handleImageError}
+          />
         ) : (
           <span className="product-icon" aria-hidden="true">{product.icon || '🌿'}</span>
         )}
