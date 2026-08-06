@@ -1,11 +1,11 @@
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
-import { gardenProducts } from '../data/catalog.js';
+import { officialGardenProducts } from '../data/officialCatalog.js';
 
 export async function migrateLegacyProducts() {
   const batch = writeBatch(db);
 
-  gardenProducts.forEach((product, index) => {
+  officialGardenProducts.forEach((product, index) => {
     const reference = doc(db, 'products', product.id);
     batch.set(reference, {
       ...product,
@@ -17,5 +17,5 @@ export async function migrateLegacyProducts() {
   });
 
   await batch.commit();
-  return gardenProducts.length;
+  return officialGardenProducts.length;
 }
