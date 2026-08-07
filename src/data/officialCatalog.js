@@ -739,10 +739,9 @@ const addedProducts = [
     "url": "https://www.amazon.com.br/dp/0875421210/?coliid=I25MEMMU6FJJ9L&colid=K8085KC1GDD9&psc=1&ref_=list_c_wl_lv_ov_lig_dp_it",
     "status": "available",
     "published": true,
-    "priority": "Substituir pela edição brasileira",
-    "purchaseDecision": "Não comprar duplicado agora",
+    "priority": "Alta",
     "notes": [
-      "Mesma obra de Técnicas de Magia Natural — O Poder da Terra. Preferir a edição brasileira de R$ 39,92."
+      "Desejo manter as duas versões desta obra na biblioteca: a edição original em inglês e a edição brasileira em português."
     ]
   },
   {
@@ -849,9 +848,8 @@ const addedProducts = [
     "status": "available",
     "published": true,
     "priority": "Alta",
-    "purchaseDecision": "Preferir esta edição",
     "notes": [
-      "Mesma obra que Earth Power: Techniques of Natural Magic — não comprar duplicado."
+      "Desejo manter as duas versões desta obra na biblioteca: esta edição brasileira em português e a edição original em inglês."
     ]
   },
   {
