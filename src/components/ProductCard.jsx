@@ -16,6 +16,7 @@ export default function ProductCard({ product }) {
   const [imageFailed, setImageFailed] = useState(false);
   const meanings = Array.isArray(product.meanings) ? product.meanings : [];
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
+  const notes = Array.isArray(product.notes) ? product.notes : [];
 
   useEffect(() => {
     setImageFailed(false);
@@ -60,6 +61,29 @@ export default function ProductCard({ product }) {
 
         {sizes.length > 0 && (
           <p className="product-meta"><strong>Tamanho desejado:</strong> {sizes.join(', ')}</p>
+        )}
+
+        {product.priority && (
+          <p className="product-meta"><strong>Prioridade:</strong> {product.priority}</p>
+        )}
+
+        {product.purchaseDecision && (
+          <p className="product-meta"><strong>Decisão de compra:</strong> {product.purchaseDecision}</p>
+        )}
+
+        {product.unitPrice != null && product.totalPrice != null && (
+          <p className="product-meta">
+            <strong>Valores:</strong> {quantityDesired} × {product.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} = {product.totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </p>
+        )}
+
+        {notes.length > 0 && (
+          <details className="story-details">
+            <summary>📝 Observações importantes</summary>
+            <ul>
+              {notes.map(note => <li key={note}>{note}</li>)}
+            </ul>
+          </details>
         )}
 
         {quantityDesired > 1 && (
