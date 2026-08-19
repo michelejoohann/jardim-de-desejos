@@ -23,9 +23,6 @@ const productOverrides = {
     url: 'https://www.amazon.com.br/dp/B0H18GQLFQ?th=1&psc=1'
   },
   'suporte-planta-macrame-boho-cru': { imageUrl: '/jardim-de-desejos/images/macrame.svg' },
-  'caixa-areia-jelplast-sandbox-premium': { imageUrl: '/jardim-de-desejos/images/caixa-areia.svg' },
-  'kit-lencol-soft-plush-felpudo-4-cores': { imageUrl: '/jardim-de-desejos/images/lencol-plush.svg' },
-  'kit-cortador-grama-sem-fio-2-baterias': { imageUrl: '/jardim-de-desejos/images/cortador-grama.svg' }
 };
 
 const addedProducts = [
