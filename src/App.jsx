@@ -17,6 +17,11 @@ const categoryLabels = {
   pets: '🐾 Pets',
 };
 
+const REMOVED_PRODUCT_IDS = new Set([
+  'avental-ron',
+  'xadrez-azul',
+]);
+
 function labelFromValue(value) {
   return value
     .split('-')
@@ -52,7 +57,9 @@ function mergeCatalogWithFirestore(catalog, firestoreProducts) {
   });
   const catalogIds = new Set(catalog.map(product => product.id));
   const onlyInFirestore = firestoreProducts.filter(product => !catalogIds.has(product.id));
-  return [...merged, ...onlyInFirestore].filter(product => !isTikTokSource(product));
+  return [...merged, ...onlyInFirestore].filter(
+    product => !isTikTokSource(product) && !REMOVED_PRODUCT_IDS.has(product.id)
+  );
 }
 
 export default function App() {
