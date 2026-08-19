@@ -24,6 +24,21 @@ function labelFromValue(value) {
     .join(' ');
 }
 
+function isTikTokSource(product) {
+  const source = [
+    product.store,
+    product.source,
+    product.url,
+    product.sourceUrl,
+    product.link,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLocaleLowerCase('pt-BR');
+
+  return source.includes('tiktok');
+}
+
 function mergeCatalogWithFirestore(catalog, firestoreProducts) {
   const firestoreById = new Map(firestoreProducts.map(product => [product.id, product]));
   const merged = catalog.map(product => {
@@ -37,7 +52,7 @@ function mergeCatalogWithFirestore(catalog, firestoreProducts) {
   });
   const catalogIds = new Set(catalog.map(product => product.id));
   const onlyInFirestore = firestoreProducts.filter(product => !catalogIds.has(product.id));
-  return [...merged, ...onlyInFirestore];
+  return [...merged, ...onlyInFirestore].filter(product => !isTikTokSource(product));
 }
 
 export default function App() {
