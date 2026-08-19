@@ -23,6 +23,9 @@ const productOverrides = {
     url: 'https://www.amazon.com.br/dp/B0H18GQLFQ?th=1&psc=1'
   },
   'suporte-planta-macrame-boho-cru': { imageUrl: 'https://m.media-amazon.com/images/I/51DXVVqTIuL._AC_SY879_.jpg' },
+  'fairy-creme': { imageUrl: 'https://acdn-us.mitiendanube.com/stores/002/946/175/products/img_2025_10_11-16_16_05_2510_98d943e2-d27c924ee659eb76b417602194935907-1024-1024.webp' },
+  'garden': { imageUrl: 'https://acdn-us.mitiendanube.com/stores/007/299/267/products/6efa348d7427ef1b7c6a9edacd46c9c7-795e9fcfaa0067ab6517828263869457-1024-1024.webp' },
+  'arwen': { imageUrl: 'https://acdn-us.mitiendanube.com/stores/007/299/267/products/1ce0adf8eca2f2f7e05112c63e59f0db-6005dd6b5666a7ac8817791128075756-1024-1024.webp' },
 };
 
 const addedProducts = [
