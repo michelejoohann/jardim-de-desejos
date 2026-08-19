@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Presente">
+  <rect width="64" height="64" rx="14" fill="#314738"/>
+  <path d="M32 25c-4-9-14-11-17-5-3 7 8 9 17 9 9 0 20-2 17-9-3-6-13-4-17 5Z" fill="none" stroke="#F6D79A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="10" y="25" width="44" height="12" rx="3" fill="#E9A7BC"/>
+  <rect x="14" y="35" width="36" height="20" rx="4" fill="#D783A4"/>
+  <path d="M28 25h8v30h-8z" fill="#F6D79A"/>
+  <path d="M10 31h44" stroke="#F6D79A" stroke-width="4"/>
+</svg>
