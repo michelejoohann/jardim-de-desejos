@@ -48,7 +48,7 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [subcategory, setSubcategory] = useState('all');
-  const [sort, setSort] = useState('default');
+  const [sort, setSort] = useState('priceAsc');
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, currentUser => {
