@@ -1042,6 +1042,38 @@ const addedProducts = [
       "Frete grátis na captura.",
       "Confirmar que os dois pontos de instalação são 127 V e suportam a carga de 1.500 W de cada aparelho."
     ]
+  },
+  {
+    "id": "furador-cogumelo-disco-encadernacao",
+    "category": "arte",
+    "subcategory": "artesanato-criacao",
+    "collection": "Atelier Criativo",
+    "icon": "📔",
+    "name": "Furador Cogumelo para Encadernação em Disco",
+    "description": "Furador branco para encadernação em disco, com perfuração em formato cogumelo, dois furos e guia de alinhamento para diferentes tamanhos de caderno.",
+    "dream": "Criar e personalizar cadernos, planners, diários e grimórios com acabamento organizado e profissional.",
+    "meanings": [
+      "Encadernação",
+      "Papelaria",
+      "Criatividade",
+      "Organização",
+      "Artesanato"
+    ],
+    "store": "Mercado Livre",
+    "color": "Branco",
+    "quantityDesired": 1,
+    "quantityReceived": 0,
+    "price": 78.89,
+    "priceLabel": "R$ 78,89",
+    "imageUrl": "https://http2.mlstatic.com/D_NQ_NP_2X_752785-MLB80335297815_102024-F-furador-cogumelo-disco-encadernacao-tipo-caderno-inteligente.webp",
+    "url": "https://www.mercadolivre.com.br/furador-cogumelo-disco-encadernacao-tipo-caderno-inteligente/up/MLBU610503615?pdp_filters=item_id:MLB4983468356#polycard_client=cart_list&wid=MLB4983468356&sid=cart",
+    "status": "available",
+    "published": true,
+    "notes": [
+      "Forma da perfuração: cogumelo.",
+      "Quantidade de perfurações: 2.",
+      "Preço mostrado na captura: R$ 78,89."
+    ]
   }
 ];
 
