@@ -22,7 +22,7 @@ const productOverrides = {
     imageUrl: 'https://m.media-amazon.com/images/I/71PLyKKNd5L._AC_SX679_.jpg',
     url: 'https://www.amazon.com.br/dp/B0H18GQLFQ?th=1&psc=1'
   },
-  'suporte-planta-macrame-boho-cru': { imageUrl: '/jardim-de-desejos/images/macrame.svg' },
+  'suporte-planta-macrame-boho-cru': { imageUrl: 'https://m.media-amazon.com/images/I/51DXVVqTIuL._AC_SY879_.jpg' },
 };
 
 const addedProducts = [
