@@ -5,6 +5,7 @@ import { auth, db } from './firebase/config.js';
 import ProductCard from './components/ProductCard.jsx';
 import AdminMigrationPanel from './components/AdminMigrationPanel.jsx';
 import { officialGardenProducts } from './data/officialCatalog.js';
+import { gocaseProducts } from './data/gocaseProducts.js';
 
 const categoryLabels = {
   casa: '🏡 Casa',
@@ -100,7 +101,7 @@ export default function App() {
   }, []);
 
   const sourceProducts = useMemo(
-    () => mergeCatalogWithFirestore(officialGardenProducts, firestoreProducts),
+    () => mergeCatalogWithFirestore([...officialGardenProducts, ...gocaseProducts], firestoreProducts),
     [firestoreProducts]
   );
 
