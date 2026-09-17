@@ -64,6 +64,7 @@ function mergeCatalogWithFirestore(catalog, firestoreProducts) {
 
 export default function App() {
   const [firestoreProducts, setFirestoreProducts] = useState([]);
+  const [firestoreStatus, setFirestoreStatus] = useState('loading');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -73,7 +74,10 @@ export default function App() {
   const [sort, setSort] = useState('priceAsc');
 
   useEffect(() => {
+    let active = true;
+
     const unsubscribeAuth = onAuthStateChanged(auth, currentUser => {
+      if (!active) return;
       setUser(currentUser);
       if (!currentUser) {
         signInAnonymously(auth).catch(() => setError('Não foi possível iniciar a sessão do visitante.'));
@@ -84,16 +88,22 @@ export default function App() {
     const unsubscribeProducts = onSnapshot(
       productsQuery,
       snapshot => {
+        if (!active) return;
         setFirestoreProducts(snapshot.docs.map(document => ({ id: document.id, ...document.data() })));
+        setFirestoreStatus(snapshot.empty ? 'empty' : 'ready');
+        setError('');
         setLoading(false);
       },
       () => {
-        setError('O Firestore ainda não pôde ser consultado. O catálogo local foi carregado como fallback.');
+        if (!active) return;
+        setFirestoreStatus('unavailable');
+        setError('Não foi possível consultar o Firestore. O catálogo local está sendo exibido como fallback.');
         setLoading(false);
       }
     );
 
     return () => {
+      active = false;
       unsubscribeAuth();
       unsubscribeProducts();
     };
@@ -103,8 +113,6 @@ export default function App() {
     () => mergeCatalogWithFirestore([...officialGardenProducts, ...gocaseProducts], firestoreProducts),
     [firestoreProducts]
   );
-
-  const usingFallback = !loading && !firestoreProducts.length;
 
   const availableCategories = useMemo(
     () => [...new Set(sourceProducts.map(product => product.category).filter(Boolean))].sort(),
@@ -124,7 +132,7 @@ export default function App() {
       if (product.published === false) return false;
       const matchesCategory = category === 'all' || product.category === category;
       const matchesSubcategory = subcategory === 'all' || product.subcategory === subcategory;
-      const searchable = `${product.name} ${product.collection} ${product.description} ${product.dream || ''} ${product.story || ''}`.toLocaleLowerCase('pt-BR');
+      const searchable = `${product.name} ${product.collection || ''} ${product.description || ''} ${product.dream || ''} ${product.story || ''}`.toLocaleLowerCase('pt-BR');
       return matchesCategory && matchesSubcategory && searchable.includes(term);
     });
 
@@ -139,6 +147,13 @@ export default function App() {
     setSubcategory('all');
   }
 
+  const statusMessage = {
+    loading: 'Conectando ao Firestore…',
+    ready: 'Firestore como fonte oficial',
+    empty: 'Firestore conectado · banco sem produtos',
+    unavailable: 'Firestore indisponível · usando fallback local',
+  }[firestoreStatus];
+
   return (
     <div className="app-shell">
       <header className="hero">
@@ -148,7 +163,7 @@ export default function App() {
         <div className="hero-stats">
           <span>{sourceProducts.length} desejos no jardim</span>
           <span>{visibleProducts.length} exibidos</span>
-          <span>{firestoreProducts.length ? 'Firestore como fonte oficial' : 'Catálogo local em fallback'}</span>
+          <span>{statusMessage}</span>
         </div>
       </header>
 
@@ -184,8 +199,9 @@ export default function App() {
         </section>
 
         {loading && <p className="notice">Conectando ao Jardim…</p>}
-        {usingFallback && <p className="notice warning">O Firestore está vazio ou indisponível. O catálogo local continua visível como fallback.</p>}
-        {error && <p className="notice error" role="alert">{error}</p>}
+        {firestoreStatus === 'empty' && <p className="notice warning">O Firestore está conectado, mas ainda não possui produtos. O catálogo local está visível como fallback até a importação.</p>}
+        {firestoreStatus === 'unavailable' && <p className="notice error" role="alert">O Firestore está indisponível no momento. O catálogo local continua visível como fallback.</p>}
+        {error && firestoreStatus !== 'unavailable' && <p className="notice error" role="alert">{error}</p>}
 
         <section className="product-grid" aria-live="polite">
           {visibleProducts.map(product => <ProductCard key={product.id} product={product} />)}
