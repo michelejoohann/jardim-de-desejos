@@ -12,23 +12,34 @@ export const migrationCatalog = [
   ...gocaseProducts,
 ];
 
+// Firestore limits a single write batch to 500 operations. Keep a safety
+// margin so future metadata writes can be added without reaching the limit.
+const MIGRATION_BATCH_SIZE = 400;
+
 export async function migrateLegacyProducts() {
   const uniqueProducts = Array.from(
     new Map(migrationCatalog.map(product => [product.id, product])).values()
   );
 
-  const batch = writeBatch(db);
+  let migratedCount = 0;
 
-  uniqueProducts.forEach((product, index) => {
-    const reference = doc(db, 'products', product.id);
-    batch.set(reference, {
-      ...product,
-      order: index,
-      migratedFrom: 'catalog-v2.4',
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-  });
+  for (let start = 0; start < uniqueProducts.length; start += MIGRATION_BATCH_SIZE) {
+    const productsBatch = uniqueProducts.slice(start, start + MIGRATION_BATCH_SIZE);
+    const batch = writeBatch(db);
 
-  await batch.commit();
-  return uniqueProducts.length;
+    productsBatch.forEach((product, index) => {
+      const reference = doc(db, 'products', product.id);
+      batch.set(reference, {
+        ...product,
+        order: start + index,
+        migratedFrom: 'catalog-v2.4',
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    });
+
+    await batch.commit();
+    migratedCount += productsBatch.length;
+  }
+
+  return migratedCount;
 }
