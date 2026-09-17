@@ -18,10 +18,6 @@ const categoryLabels = {
   pets: '🐾 Pets',
 };
 
-const REMOVED_PRODUCT_IDS = new Set([
-  'avental-ron',
-  'xadrez-azul',
-]);
 
 function labelFromValue(value) {
   return value
@@ -45,22 +41,7 @@ function isTikTokSource(product) {
   return source.includes('tiktok');
 }
 
-/**
- * Firestore is the runtime source of truth. Local catalogs are retained only
- * as a safe fallback while a product has not yet been migrated to Firestore.
- */
-function mergeCatalogWithFirestore(catalog, firestoreProducts) {
-  const catalogById = new Map(catalog.map(product => [product.id, product]));
-  const firestoreById = new Map(firestoreProducts.map(product => [product.id, product]));
 
-  const merged = catalog.map(product => firestoreById.get(product.id) || product);
-  const catalogIds = new Set(catalogById.keys());
-  const onlyInFirestore = firestoreProducts.filter(product => !catalogIds.has(product.id));
-
-  return [...merged, ...onlyInFirestore].filter(
-    product => !isTikTokSource(product) && !REMOVED_PRODUCT_IDS.has(product.id)
-  );
-}
 
 export default function App() {
   const [firestoreProducts, setFirestoreProducts] = useState([]);
@@ -109,10 +90,15 @@ export default function App() {
     };
   }, []);
 
-  const sourceProducts = useMemo(
-    () => mergeCatalogWithFirestore([...officialGardenProducts, ...gocaseProducts], firestoreProducts),
-    [firestoreProducts]
-  );
+  const sourceProducts = useMemo(() => {
+    // Firestore is the sole source of truth when connected and populated.
+    // Local catalog is used only as fallback if Firestore is empty or unavailable.
+    const rawProducts = firestoreStatus === 'ready'
+      ? firestoreProducts
+      : [...officialGardenProducts, ...gocaseProducts];
+
+    return rawProducts.filter(product => !isTikTokSource(product));
+  }, [firestoreStatus, firestoreProducts]);
 
   const availableCategories = useMemo(
     () => [...new Set(sourceProducts.map(product => product.category).filter(Boolean))].sort(),

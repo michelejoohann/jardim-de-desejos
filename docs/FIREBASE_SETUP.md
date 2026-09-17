@@ -2,36 +2,42 @@
 
 ## 1. Publicar regras do Firestore
 
-No Firebase Console, abra **Firestore Database → Regras** e substitua o conteúdo pelas regras do arquivo `firestore.rules` desta branch. Clique em **Publicar**.
+No Firebase Console, abra **Firestore Database → Regras** e substitua o conteúdo pelas regras do arquivo `firestore.rules`. Clique em **Publicar**.
 
-Essas regras permitem leitura pública dos produtos publicados e restringem alterações ao UID administrativo configurado.
+Essas regras permitem:
+- Leitura pública dos produtos na coleção `products`.
+- Escrita restrita exclusivamente ao UID administrativo (`7G4v3hEMtaVzI8MUDsXjVCNXGJz1`).
+- Permissões para reservas públicas, privadas e comentários vinculadas ao usuário autenticado.
 
 ## 2. Conferir autenticação
 
 Em **Authentication → Método de login**, mantenha ativos:
 
-- Anônimo, para visitantes;
-- E-mail/senha, para a administradora.
+- **Anônimo**, para visitantes (sessão de leitura e reservas públicas);
+- **E-mail/senha**, para a administradora do Jardim.
 
-## 3. Domínio autorizado
+## 3. Domínios autorizados
 
-Em **Authentication → Configurações → Domínios autorizados**, confirme:
+Em **Authentication → Configurações → Domínios autorizados**, confirme que estão liberados:
 
 - `michelejoohann.github.io`
 - `localhost`
 
-## 4. Migração dos produtos
+## 4. Fonte de dados e Catálogo de Segurança
 
-A aplicação React possui um catálogo legado de segurança em `src/data/legacyProducts.js`. Enquanto a coleção `products` estiver vazia, esse catálogo será exibido automaticamente.
+- **Firestore como Fonte da Verdade**: Quando o banco está conectado e possui dados (`ready`), os produtos exibidos na tela vêm **exclusivamente do Firestore** em tempo real via `onSnapshot`.
+- **Exclusões e Edições Imediatas**: Itens deletados ou modificados no Firebase Console refletem instantaneamente no site para todos os visitantes.
+- **Fallback Local**: Caso o Firestore esteja vazio ou inacessível, o aplicativo utiliza o catálogo consolidado em `src/data/officialCatalog.js` e `src/data/gocaseProducts.js` como contingência temporária.
 
-Na próxima etapa, o painel administrativo terá uma ação de migração que criará os documentos no Firestore. Após a migração, o catálogo passará a usar os dados do banco em tempo real.
+## 5. Migração dos produtos
 
-## 5. Segurança da configuração Web
+Pelo painel administrativo integrado na aplicação, a administradora autenticada pode executar a migração que popula ou atualiza a coleção `products` em lote (usando `writeBatch` com IDs estáveis e `merge: true`).
 
-A configuração Web do Firebase é entregue ao navegador e não deve ser tratada como credencial administrativa. A proteção efetiva depende de:
+## 6. Segurança da configuração Web
 
-- Firebase Authentication;
-- Firestore Security Rules;
-- Storage Security Rules;
-- restrição da chave por domínio;
-- App Check, em uma etapa posterior.
+A configuração pública em `src/firebase/config.js` é entregue ao cliente e não concede privilégios administrativos por si só. A proteção de dados é garantida por:
+
+- Firebase Authentication (UID administrativo seguro);
+- Firestore Security Rules (`firestore.rules`);
+- Domínios autorizados no Console;
+- Storage Security Rules.

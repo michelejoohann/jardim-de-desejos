@@ -1,157 +1,206 @@
-# 🌿 Jardim de Desejos
+# 🌿 Jardim de Desejos de Michèlé Joohann
 
-Um jardim digital para transformar desejos em sementes: registrar aquilo que se deseja, acompanhar o que já foi conquistado e dar significado a cada pequena realização.
+> **Desejar. Cultivar. Conquistar. Florescer.** ✨  
+> Um espaço digital e afetivo para transformar desejos em sementes: registrar sonhos, acompanhar o que já foi conquistado e dar significado a cada realização.
 
-O projeto nasceu como uma **lista de desejos**, mas evoluiu para uma experiência mais simbólica e afetiva — um espaço onde cada objeto pode representar uma intenção, uma história ou um sonho.
+---
 
-## ✨ Arquitetura atual
+## 🏛️ Arquitetura do Sistema
 
-O **Firestore é a fonte oficial do catálogo em tempo de execução**. Os catálogos mantidos no código (`catalog.js`, `officialCatalog.js` e `gocaseProducts.js`) funcionam como fonte de inicialização/migração e como fallback local quando o Firestore está vazio ou indisponível.
+O **Jardim de Desejos** foi construído com arquitetura baseada em **React 19**, **Vite 7** e **Firebase 12**, entregue via **GitHub Pages** através de integração contínua (GitHub Actions).
 
-A coleção principal é:
+```mermaid
+graph TB
+    subgraph Client ["🖥️ Cliente / Navegador"]
+        subgraph PublicUI ["Site Público (Visitantes)"]
+            Hero["Hero, Frase & Indicadores"]
+            Toolbar["Barra de Busca, Ambientes & Canteiros"]
+            Grid["Grade de Produtos (ProductCard)"]
+        end
+        subgraph AdminUI ["Painel de Administração"]
+            AdminPanel["AdminMigrationPanel (Login & Importação)"]
+        end
+        subgraph CoreApp ["Aplicação React 19 + Vite"]
+            App["App.jsx (Estado, Filtros & Sincronização)"]
+            FallbackData["Catálogo Local de Contingência (officialCatalog + gocaseProducts)"]
+        end
+    end
 
-```text
-Firestore
-└── products
-    ├── <productId>
-    ├── <productId>
-    └── ...
+    subgraph FirebaseServices ["🔥 Firebase Backend-as-a-Service"]
+        Auth["Firebase Authentication<br/>(Anônimo para visitantes & Email/Senha para Admin)"]
+        Firestore["Cloud Firestore Database<br/>(Coleção oficial products)"]
+        Storage["Firebase Storage<br/>(Fotos e assets)"]
+        Rules["Security Rules<br/>(firestore.rules)"]
+    end
+
+    subgraph HostingPipeline ["🚀 Deploy Contínuo (CI/CD)"]
+        GHRepo["GitHub Repository (main)"]
+        GHActions["GitHub Actions (deploy-pages.yml)"]
+        GHPages["GitHub Pages CDN"]
+    end
+
+    Grid --> App
+    Toolbar --> App
+    Hero --> App
+    AdminPanel --> App
+
+    App -- "Sessão anônima / Admin" --> Auth
+    App -- "Sincronização em tempo real (onSnapshot)" --> Firestore
+    AdminPanel -- "Gravação em lote com IDs estáveis" --> Firestore
+    App -. "Fallback seguro se banco offline/vazio" .-> FallbackData
+
+    GHRepo --> GHActions
+    GHActions --> GHPages
+    GHPages --> Client
 ```
 
-Cada produto utiliza um **ID estável**, permitindo executar a migração novamente sem criar documentos duplicados.
+---
+
+## 🔄 Ciclo de Vida dos Dados e Tempo Real
+
+A arquitetura adota o **Cloud Firestore como Fonte Única da Verdade** em tempo de execução:
+
+1. **Leitura Reativa (`onSnapshot`)**: Assim que a página abre, um listener escuta a coleção `products` do Firestore. Qualquer alteração (criação, edição ou exclusão) reflete na tela **instantaneamente sem recarregar a página**.
+2. **Exclusão Imediata (Sem Ressurreição)**: Quando um produto é excluído no Firestore, o aplicativo atualiza a lista em tempo real. O catálogo local **não** ressuscita itens removidos quando o Firestore está ativo (`ready`).
+3. **Fallback Seguro**: O catálogo local consolidado em código serve de contingência estritamente quando o banco estiver indisponível ou vazio (antes da migração inicial).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Visitante as 👤 Visitante / Admin
+    participant App as ⚛️ React App (App.jsx)
+    participant Auth as 🔐 Firebase Auth
+    participant Firestore as 🔥 Cloud Firestore (products)
+    participant Fallback as 📦 Catálogo Local (Fallback)
+
+    Visitante->>App: Acessa o Jardim
+    App->>Auth: Inicia sessão anônima de visitante
+    Auth-->>App: Sessão confirmada (UID)
+
+    App->>Firestore: onSnapshot na coleção products
+    Firestore-->>App: Snapshot em tempo real
+
+    alt Firestore Conectado e com Itens (status: ready)
+        App->>App: Define produtos exibidos = firestoreProducts
+        Note over App: Firestore é a FONTE ÚNICA da verdade.<br/>Itens deletados somem na hora!
+    else Firestore Vazio ou Indisponível (status: empty / unavailable)
+        App->>Fallback: Carrega catálogo estático consolidado
+        App->>App: Define produtos exibidos = dadosLocais
+        Note over App: Contingência segura até migração
+    end
+
+    App-->>Visitante: Exibe desejos com contadores, busca e filtros
+
+    Note over Visitante,Firestore: Evento: Administradora exclui um produto no Firebase
+    Firestore-->>App: onSnapshot emite lista atualizada (sem o item)
+    App->>App: Re-renderiza sem o produto excluído
+    App-->>Visitante: O produto desaparece na hora da tela
+```
+
+---
+
+## 🗂️ Estrutura do Projeto
+
+```text
+JardimDosDesejos/
+├── .github/
+│   └── workflows/
+│       └── deploy-pages.yml      # CI/CD: build Vite e deploy automático no GitHub Pages
+├── docs/
+│   ├── ARCHITECTURE.md           # Desenho detalhado da arquitetura e fluxos
+│   ├── FIREBASE_SETUP.md         # Instruções de configuração do Firebase Console
+│   ├── INITIAL_MIGRATION.md      # Procedimento de migração e consolidação de dados
+│   └── PRODUCT_BACKLOG.md        # Histórico de requisitos e backlog
+├── public/
+│   ├── favicon.svg               # Favicon do Jardim
+│   └── images/                   # Imagens e referências visuais
+├── src/
+│   ├── components/
+│   │   ├── AdminMigrationPanel.jsx # Painel administrativo (login e importação em lote)
+│   │   └── ProductCard.jsx       # Card de produto com status, história, sonho e links
+│   ├── data/
+│   │   ├── catalog.js            # Catálogo base histórico
+│   │   ├── officialCatalog.js    # Catálogo consolidado oficial (84 produtos com overrides)
+│   │   └── gocaseProducts.js     # Coleção Gocase (2 produtos)
+│   ├── firebase/
+│   │   └── config.js             # Inicialização do SDK Firebase (Auth, Firestore, Storage)
+│   ├── services/
+│   │   └── productMigration.js   # Serviço de migração idempotente (lotes com writeBatch)
+│   ├── styles/
+│   │   └── global.css            # Estilos globais, tokens de cores e responsividade
+│   ├── App.jsx                   # Componente raiz: autenticação, queries e filtros
+│   └── main.jsx                  # Ponto de montagem da aplicação React 19
+├── firestore.rules               # Regras de segurança atômicas do Firestore
+├── index.html                    # Entrada HTML principal com metadados SEO
+├── package.json                  # Manifesto do projeto e dependências
+├── vite.config.js                # Configuração do Vite com base /jardim-de-desejos/
+└── README.md                     # Este documento
+```
+
+---
 
 ## 🧚 Funcionalidades
 
-- 🌱 Catálogo de desejos organizado por ambientes e canteiros
-- 🏷️ Categorias e subcategorias
-- 💰 Registro de valores de referência
-- 🛍️ Loja e link do produto
-- 📖 História e significado de cada desejo
-- 💭 Registro do sonho associado ao presente
-- 🎁 Controle de quantidade desejada e recebida
-- ✨ Status como disponível, reservado e realizado
-- 🔎 Busca por nome, coleção, sonho, descrição e história
-- ↕️ Ordenação por preço e nome
-- 🔥 Leitura em tempo real do Firestore
-- 🔐 Autenticação administrativa via Firebase Authentication
-- 📦 Migração idempotente de todos os catálogos para o Firestore
-- 🛡️ Regras do Firestore com leitura pública e escrita administrativa
-- 🌿 Fallback local para manter o catálogo visível em caso de indisponibilidade do banco
+- 🌱 **Catálogo Afetivo**: Organização por ambientes (categorias) e canteiros (subcategorias).
+- 🔍 **Busca Completa**: Pesquisa textual instantânea por nome, coleção, história, sonho e descrição.
+- 💰 **Valores & Referências**: Informações de preços, condições e lojas de origem.
+- 📖 **História & Significado**: Cada presente carrega o registro do sonho e da memória associada.
+- 🎁 **Status Visual**: Controle de desejos disponíveis, reservados ou realizados ("Floresceu 🌸").
+- 🔥 **Firestore em Tempo Real**: Atualizações, edições e exclusões instantâneas via `onSnapshot`.
+- 🔐 **Painel Administrativo**: Área de login com validação de UID seguro e migração de catálogo.
+- 🛡️ **Segurança Reforçada**: Regras de leitura pública e permissões de escrita restritas à administradora.
 
-## 🗂️ Fontes de catálogo
+---
 
-| Fonte | Papel |
-|---|---|
-| `src/data/catalog.js` | Catálogo base histórico |
-| `src/data/officialCatalog.js` | Catálogo oficial consolidado e overrides |
-| `src/data/gocaseProducts.js` | Desejos específicos da coleção Gocase |
-| `src/services/productMigration.js` | Consolida e grava todos os catálogos no Firestore |
-| Firestore `products` | **Fonte oficial em execução** |
+## 📝 Como Gerenciar Produtos no Firebase
 
-A migração atual consolida `officialGardenProducts` e `gocaseProducts`, remove duplicidades por ID e grava os documentos na coleção `products`.
+Com a arquitetura consolidada, a gestão dos produtos pode ser feita diretamente pelo **Firebase Console** (Firestore Database → Coleção `products`):
 
-## 👜 Exemplo: coleção Gocase
+| Ação | Como fazer no Firebase Console | Comportamento no Site |
+|---|---|---|
+| **Excluir um produto** | Clique no documento do produto na coleção `products` e selecione **Excluir documento**. | O produto **some imediatamente** da tela em tempo real para todos os usuários. |
+| **Ocultar temporariamente (Soft Delete)** | Edite o campo `published` para `false` no documento. | O produto fica guardado no banco mas não é renderizado na grade pública. |
+| **Editar preço ou foto** | Atualize o campo `price`, `priceLabel` ou `imageUrl` no documento. | O card atualiza instantaneamente no site sem recarregar a página. |
+| **Marcar como Realizado** | Altere o campo `status` para `"received"` ou iguale `quantityReceived` ao `quantityDesired`. | O card exibe o selo **"Floresceu 🌸"** / **"Realizado"**. |
+| **Adicionar novo desejo** | Crie um novo documento na coleção `products` com um `id` descritivo (ex: `luminaria-vintage`). | O novo desejo aparece instantaneamente na grade e nos filtros. |
 
-Entre os desejos cadastrados estão:
-
-| Item | Cor | Valor de referência |
-|---|---|---:|
-| **Tote Mini — Clear** | Preto | R$ 199,90 |
-| **Organizador Tote Bag — Marrom** | Marrom | R$ 39,90 |
-
-Esses itens fazem parte do catálogo de migração e podem ser persistidos no Firestore pelo painel administrativo.
+---
 
 ## 🛠️ Tecnologias
 
-- **React 19**
-- **Vite 7**
-- **JavaScript / ES Modules**
-- **Firebase 12**
-  - Authentication
-  - Firestore
-  - Storage
-- **CSS**
+- **React 19** (`^19.1.0`)
+- **Vite 7** (`^7.0.0`)
+- **Firebase 12** (`^12.0.0`): Authentication, Cloud Firestore e Storage
+- **Vanilla CSS Moderno**: Design system artesanal com gradientes, tokens de cores e micro-interações
+- **GitHub Actions & GitHub Pages**: Deploy contínuo automatizado
 
-## 📁 Estrutura principal
+---
 
-```text
-jardim-de-desejos/
-├── src/
-│   ├── components/
-│   │   ├── AdminMigrationPanel.jsx
-│   │   └── ProductCard.jsx
-│   ├── data/
-│   │   ├── catalog.js
-│   │   ├── officialCatalog.js
-│   │   └── gocaseProducts.js
-│   ├── firebase/
-│   │   └── config.js
-│   ├── services/
-│   │   └── productMigration.js
-│   ├── App.jsx
-│   └── main.jsx
-├── firestore.rules
-├── public/
-├── package.json
-└── README.md
-```
-
-## 🔐 Fluxo administrativo
-
-1. O visitante acessa o Jardim e recebe uma sessão anônima do Firebase Authentication.
-2. O aplicativo lê a coleção `products` do Firestore em tempo real.
-3. A aplicação utiliza o Firestore como fonte oficial quando existem documentos persistidos.
-4. O catálogo local é utilizado como fallback caso o banco esteja vazio ou indisponível.
-5. A administradora entra com a conta administrativa configurada no Firebase.
-6. O botão **Importar catálogo atual** grava/atualiza todos os produtos dos catálogos oficiais, incluindo os produtos Gocase.
-7. Os IDs estáveis impedem a criação de duplicatas durante novas migrações.
-
-## 🚀 Executando localmente
+## 🚀 Como Executar Localmente
 
 ### 1. Instalar dependências
-
 ```bash
 npm install
 ```
 
-### 2. Iniciar o ambiente de desenvolvimento
-
+### 2. Iniciar o servidor de desenvolvimento
 ```bash
 npm run dev
 ```
+O servidor local iniciará em `http://localhost:5173/jardim-de-desejos/`.
 
-### 3. Gerar a versão de produção
-
+### 3. Gerar build de produção
 ```bash
 npm run build
 ```
 
-### 4. Visualizar o build
-
+### 4. Testar a versão de produção localmente
 ```bash
 npm run preview
 ```
 
-## ⚠️ Observação sobre a migração
-
-A correção da versão 2.4 garante que **todos os catálogos utilizados pelo aplicativo sejam incluídos no processo de migração**, e não somente o catálogo oficial anterior.
-
-Depois desta atualização, é necessário executar **uma vez** a ação administrativa **Importar catálogo atual** para persistir no Firestore os produtos que ainda não foram migrados.
-
-A quantidade exibida no painel administrativo representa a quantidade de documentos atualmente lidos da coleção `products`; ela não é uma consulta direta ao conteúdo dos arquivos locais.
-
-## 🌸 Filosofia do projeto
-
-O Jardim de Desejos não é apenas uma lista de compras.
-
-É um registro de **coisas que despertam desejo, significado e intenção** — permitindo olhar para cada conquista como parte de uma história maior.
-
-**Desejar. Cultivar. Conquistar. Florescer.** 🌿✨
-
 ---
 
-### 📌 Projeto
+## 🌸 Filosofia
 
-**Jardim de Desejos — versão 2.4**
-
-Desenvolvido para transformar uma wishlist em uma experiência pessoal, visual e simbólica.
+O **Jardim de Desejos** não é uma simples lista de compras. É um registro sensível de aspirações, histórias e sonhos — permitindo cultivar a gratidão e celebrar cada pequena ou grande conquista.

@@ -16,7 +16,7 @@ export const migrationCatalog = [
 // margin so future metadata writes can be added without reaching the limit.
 const MIGRATION_BATCH_SIZE = 400;
 
-export async function migrateLegacyProducts() {
+export async function migrateCatalogToFirestore() {
   const uniqueProducts = Array.from(
     new Map(migrationCatalog.map(product => [product.id, product])).values()
   );
@@ -43,3 +43,6 @@ export async function migrateLegacyProducts() {
 
   return migratedCount;
 }
+
+// Backwards compatibility alias
+export const migrateLegacyProducts = migrateCatalogToFirestore;

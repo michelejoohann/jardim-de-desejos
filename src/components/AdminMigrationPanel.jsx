@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../firebase/config.js';
-import { migrateLegacyProducts } from '../services/productMigration.js';
+import { migrateCatalogToFirestore } from '../services/productMigration.js';
 
 const ADMIN_UID = '7G4v3hEMtaVzI8MUDsXjVCNXGJz1';
 
@@ -43,7 +43,7 @@ export default function AdminMigrationPanel({ user, firestoreCount }) {
     setMessage('');
     setError('');
     try {
-      const total = await migrateLegacyProducts();
+      const total = await migrateCatalogToFirestore();
       setMessage(`${total} produtos foram gravados ou atualizados no Firestore.`);
     } catch (err) {
       setError(err?.message || 'A migração não pôde ser concluída.');
