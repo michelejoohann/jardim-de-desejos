@@ -45,19 +45,18 @@ function isTikTokSource(product) {
   return source.includes('tiktok');
 }
 
+/**
+ * Firestore is the runtime source of truth. Local catalogs are retained only
+ * as a safe fallback while a product has not yet been migrated to Firestore.
+ */
 function mergeCatalogWithFirestore(catalog, firestoreProducts) {
+  const catalogById = new Map(catalog.map(product => [product.id, product]));
   const firestoreById = new Map(firestoreProducts.map(product => [product.id, product]));
-  const merged = catalog.map(product => {
-    const firestoreProduct = firestoreById.get(product.id) || {};
-    return {
-      ...firestoreProduct,
-      ...product,
-      quantityReceived: firestoreProduct.quantityReceived ?? product.quantityReceived,
-      status: firestoreProduct.status ?? product.status,
-    };
-  });
-  const catalogIds = new Set(catalog.map(product => product.id));
+
+  const merged = catalog.map(product => firestoreById.get(product.id) || product);
+  const catalogIds = new Set(catalogById.keys());
   const onlyInFirestore = firestoreProducts.filter(product => !catalogIds.has(product.id));
+
   return [...merged, ...onlyInFirestore].filter(
     product => !isTikTokSource(product) && !REMOVED_PRODUCT_IDS.has(product.id)
   );
@@ -89,7 +88,7 @@ export default function App() {
         setLoading(false);
       },
       () => {
-        setError('O Firestore ainda não pôde ser consultado. O catálogo oficial local foi carregado.');
+        setError('O Firestore ainda não pôde ser consultado. O catálogo local foi carregado como fallback.');
         setLoading(false);
       }
     );
@@ -149,7 +148,7 @@ export default function App() {
         <div className="hero-stats">
           <span>{sourceProducts.length} desejos no jardim</span>
           <span>{visibleProducts.length} exibidos</span>
-          <span>{firestoreProducts.length ? 'Catálogo oficial + Firestore' : 'Catálogo oficial ativo'}</span>
+          <span>{firestoreProducts.length ? 'Firestore como fonte oficial' : 'Catálogo local em fallback'}</span>
         </div>
       </header>
 
@@ -185,7 +184,7 @@ export default function App() {
         </section>
 
         {loading && <p className="notice">Conectando ao Jardim…</p>}
-        {usingFallback && <p className="notice warning">O Firestore está vazio ou indisponível. O catálogo oficial continua visível normalmente.</p>}
+        {usingFallback && <p className="notice warning">O Firestore está vazio ou indisponível. O catálogo local continua visível como fallback.</p>}
         {error && <p className="notice error" role="alert">{error}</p>}
 
         <section className="product-grid" aria-live="polite">
