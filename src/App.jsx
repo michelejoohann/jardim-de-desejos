@@ -53,6 +53,12 @@ export default function App() {
   const [category, setCategory] = useState('all');
   const [subcategory, setSubcategory] = useState('all');
   const [sort, setSort] = useState('priceAsc');
+  const [showAdminPanel, setShowAdminPanel] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    const adminParam = params.get('admin');
+    return adminParam === 'true' || adminParam === '';
+  });
 
   useEffect(() => {
     let active = true;
@@ -154,7 +160,13 @@ export default function App() {
       </header>
 
       <main className="content">
-        <AdminMigrationPanel user={user} firestoreCount={firestoreProducts.length} />
+        {showAdminPanel && (
+          <AdminMigrationPanel
+            user={user}
+            firestoreCount={firestoreProducts.length}
+            onClose={() => setShowAdminPanel(false)}
+          />
+        )}
 
         <section className="catalog-toolbar" aria-label="Controles do catálogo">
           <input

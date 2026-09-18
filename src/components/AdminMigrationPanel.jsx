@@ -5,7 +5,7 @@ import { migrateCatalogToFirestore } from '../services/productMigration.js';
 
 const ADMIN_UID = '7G4v3hEMtaVzI8MUDsXjVCNXGJz1';
 
-export default function AdminMigrationPanel({ user, firestoreCount }) {
+export default function AdminMigrationPanel({ user, firestoreCount, onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -55,10 +55,23 @@ export default function AdminMigrationPanel({ user, firestoreCount }) {
   if (!isAdmin) {
     return (
       <section className="admin-panel" aria-labelledby="admin-title">
-        <div>
-          <p className="section-kicker">Administração</p>
-          <h2 id="admin-title">Importação inicial do catálogo</h2>
-          <p>Entre com a conta administrativa criada no Firebase para liberar a migração.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+          <div>
+            <p className="section-kicker">Administração</p>
+            <h2 id="admin-title">Importação inicial do catálogo</h2>
+            <p>Entre com a conta administrativa criada no Firebase para liberar a migração.</p>
+          </div>
+          {onClose && (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={onClose}
+              style={{ whiteSpace: 'nowrap', padding: '6px 12px', fontSize: '0.82rem' }}
+              title="Ocultar painel administrativo"
+            >
+              ✕ Ocultar
+            </button>
+          )}
         </div>
         <form className="admin-login" onSubmit={handleLogin}>
           <label>
@@ -87,6 +100,9 @@ export default function AdminMigrationPanel({ user, firestoreCount }) {
       <div className="admin-actions">
         <button type="button" onClick={handleMigration} disabled={busy}>{busy ? 'Importando…' : 'Importar catálogo atual'}</button>
         <button type="button" className="secondary-button" onClick={() => signOut(auth)} disabled={busy}>Sair</button>
+        {onClose && (
+          <button type="button" className="secondary-button" onClick={onClose} disabled={busy}>Ocultar</button>
+        )}
       </div>
       {message && <p className="notice success">{message}</p>}
       {error && <p className="notice error" role="alert">{error}</p>}

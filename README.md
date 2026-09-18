@@ -147,7 +147,7 @@ JardimDosDesejos/
 - 📖 **História & Significado**: Cada presente carrega o registro do sonho e da memória associada.
 - 🎁 **Status Visual**: Controle de desejos disponíveis, reservados ou realizados ("Floresceu 🌸").
 - 🔥 **Firestore em Tempo Real**: Atualizações, edições e exclusões instantâneas via `onSnapshot`.
-- 🔐 **Painel Administrativo**: Área de login com validação de UID seguro e migração de catálogo.
+- 🔐 **Painel Administrativo Sob Demanda**: Área de login e migração acessível via parâmetro `?admin=true`, mantendo a vitrine limpa e poética para os visitantes.
 - 🛡️ **Segurança Reforçada**: Regras de leitura pública e permissões de escrita restritas à administradora.
 
 ---

@@ -111,7 +111,7 @@ JardimDosDesejos/
 │   └── images/                   # Imagens estáticas públicas
 ├── src/
 │   ├── components/
-│   │   ├── AdminMigrationPanel.jsx # Painel de login administrativo e migração em lote
+│   │   ├── AdminMigrationPanel.jsx # Painel administrativo e migração (acesso sob demanda via ?admin=true)
 │   │   └── ProductCard.jsx       # Card de produto com badge, história e sonho
 │   ├── data/
 │   │   ├── catalog.js            # Catálogo histórico base de produtos
