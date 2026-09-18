@@ -139,24 +139,12 @@ export default function App() {
     setSubcategory('all');
   }
 
-  const statusMessage = {
-    loading: 'Conectando ao Firestore…',
-    ready: 'Firestore como fonte oficial',
-    empty: 'Firestore conectado · banco sem produtos',
-    unavailable: 'Firestore indisponível · usando fallback local',
-  }[firestoreStatus];
-
   return (
     <div className="app-shell">
       <header className="hero">
         <p className="eyebrow">Jardim de Desejos · versão 2.4</p>
         <h1>O Jardim de Desejos de Michèlé Joohann</h1>
         <p>Sonhos cultivados com carinho, significado e história.</p>
-        <div className="hero-stats">
-          <span>{sourceProducts.length} desejos no jardim</span>
-          <span>{visibleProducts.length} exibidos</span>
-          <span>{statusMessage}</span>
-        </div>
       </header>
 
       <main className="content">

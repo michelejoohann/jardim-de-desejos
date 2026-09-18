@@ -13,7 +13,7 @@ O **Jardim de Desejos** foi construído com arquitetura baseada em **React 19**,
 graph TB
     subgraph Client ["🖥️ Cliente / Navegador"]
         subgraph PublicUI ["Site Público (Visitantes)"]
-            Hero["Hero, Frase & Indicadores"]
+            Hero["Hero & Apresentação"]
             Toolbar["Barra de Busca, Ambientes & Canteiros"]
             Grid["Grade de Produtos (ProductCard)"]
         end

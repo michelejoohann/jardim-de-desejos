@@ -12,7 +12,7 @@ O **Jardim de Desejos** é uma aplicação web moderna, responsiva e afetiva que
 graph TB
     subgraph Client ["🖥️ Cliente / Navegador"]
         subgraph PublicUI ["Experiência Pública (Visitantes)"]
-            Hero["Hero & Estatísticas"]
+            Hero["Hero & Apresentação"]
             Toolbar["Barra de Busca, Filtros & Ordenação"]
             Grid["Grade de Produtos (ProductCard)"]
         end
