@@ -29,10 +29,11 @@ service cloud.firestore {
           'reservedAt'
         ])
         && request.resource.data.productId == productId
-        && request.resource.data.status == 'reserved'
+        && (request.resource.data.status == 'reserved' || request.resource.data.status == 'received')
         && request.resource.data.visitorUid == request.auth.uid;
 
-      allow update, delete: if isAdmin();
+      allow delete: if isAdmin() || (signedIn() && resource.data.visitorUid == request.auth.uid);
+      allow update: if isAdmin();
     }
 
     match /privateReservations/{productId} {
@@ -44,12 +45,15 @@ service cloud.firestore {
           'name',
           'email',
           'message',
-          'createdAt'
+          'createdAt',
+          'status',
+          'isAnonymous'
         ])
         && request.resource.data.productId == productId
         && request.resource.data.visitorUid == request.auth.uid;
 
-      allow read, update, delete: if isAdmin();
+      allow delete: if isAdmin() || (signedIn() && resource.data.visitorUid == request.auth.uid);
+      allow read, update: if isAdmin();
     }
 
     match /comments/{commentId} {

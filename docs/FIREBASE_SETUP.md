@@ -7,7 +7,8 @@ No Firebase Console, abra **Firestore Database → Regras** e substitua o conte�
 Essas regras permitem:
 - Leitura pública dos produtos na coleção `products`.
 - Escrita restrita exclusivamente ao UID administrativo (`7G4v3hEMtaVzI8MUDsXjVCNXGJz1`).
-- Permissões para reservas públicas, privadas e comentários vinculadas ao usuário autenticado.
+- **`publicReservations/{productId}`**: Leitura pública (para atualizar status dos cards para todos os visitantes em tempo real). Criação restrita a visitantes logados (`signedIn`) com status `reserved` ou `received`. Remoção permitida ao próprio autor ou à administradora.
+- **`privateReservations/{productId}`**: Criação por visitantes autenticados. Leitura e exclusão restritas **exclusivamente à administradora** (`isAdmin()`), garantindo a privacidade absoluta dos nomes, e-mails e mensagens de carinho.
 
 ## 2. Conferir autenticação
 

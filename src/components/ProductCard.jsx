@@ -1,16 +1,33 @@
 import { useEffect, useState } from 'react';
 
-export default function ProductCard({ product }) {
+export default function ProductCard({
+  product,
+  reservation,
+  currentVisitorUid,
+  onOpenGift,
+  onCancelReservation,
+}) {
+  const effectiveStatus = reservation?.status || product.status || 'available';
+  const isMyReservation = Boolean(
+    reservation && currentVisitorUid && reservation.visitorUid === currentVisitorUid
+  );
+
   const quantityDesired = Number(product.quantityDesired || 1);
-  const quantityReceived = Number(product.quantityReceived || 0);
-  const isComplete = quantityDesired > 1 && quantityReceived >= quantityDesired;
+  const quantityReceived = Number(product.quantityReceived || (effectiveStatus === 'received' ? 1 : 0));
+  const isComplete = effectiveStatus === 'received' || (quantityDesired > 1 && quantityReceived >= quantityDesired);
+  const isReserved = effectiveStatus === 'reserved';
+
   const statusLabel = isComplete
-    ? 'Floresceu'
-    : product.status === 'reserved'
+    ? 'Floresceu 🌸'
+    : isReserved
       ? 'Reservado'
-      : product.status === 'received'
-        ? 'Realizado'
-        : 'Disponível';
+      : 'Disponível';
+
+  const statusBadgeClass = isComplete
+    ? 'status-received'
+    : isReserved
+      ? 'status-reserved'
+      : 'status-available';
 
   const imageUrl = product.imageUrl || product.image;
   const [imageFailed, setImageFailed] = useState(false);
@@ -35,7 +52,7 @@ export default function ProductCard({ product }) {
         ) : (
           <span className="product-icon" aria-hidden="true">{product.icon || '🌿'}</span>
         )}
-        <span className={`status-badge status-${isComplete ? 'received' : (product.status || 'available')}`}>{statusLabel}</span>
+        <span className={`status-badge ${statusBadgeClass}`}>{statusLabel}</span>
       </div>
 
       <div className="product-body">
@@ -103,9 +120,53 @@ export default function ProductCard({ product }) {
           </details>
         )}
 
+        {isMyReservation && (
+          <div className="reservation-notice">
+            <span>✨ Você marcou este presente ({effectiveStatus === 'received' ? 'Já comprei' : 'Vou comprar'})</span>
+            <button
+              type="button"
+              className="text-link-button"
+              onClick={() => onCancelReservation(product.id)}
+            >
+              Desfazer marcação
+            </button>
+          </div>
+        )}
+
         <div className="product-footer">
           <strong>{product.priceLabel || 'Consultar valor na loja'}</strong>
-          <a href={product.url} target="_blank" rel="noopener noreferrer">Ver presente</a>
+          <div className="product-footer-actions">
+            {product.url && (
+              <a
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="store-link-button"
+                title="Abrir página oficial do produto na loja"
+              >
+                Ver loja ↗
+              </a>
+            )}
+
+            {isComplete ? (
+              <span className="gift-tag done" title="Este desejo já foi realizado">
+                🌸 Floresceu
+              </span>
+            ) : isReserved && !isMyReservation ? (
+              <span className="gift-tag reserved" title="Alguém já planeja presentear este item">
+                ⏳ Reservado
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="gift-action-button"
+                onClick={() => onOpenGift(product)}
+                title="Marcar que vai comprar ou já comprou este presente"
+              >
+                🎁 Presentear
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </article>

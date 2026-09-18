@@ -4,8 +4,10 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { auth, db } from './firebase/config.js';
 import ProductCard from './components/ProductCard.jsx';
 import AdminMigrationPanel from './components/AdminMigrationPanel.jsx';
+import GiftModal from './components/GiftModal.jsx';
 import { officialGardenProducts } from './data/officialCatalog.js';
 import { gocaseProducts } from './data/gocaseProducts.js';
+import { cancelReservation, subscribeToPublicReservations } from './services/reservationService.js';
 
 const categoryLabels = {
   casa: '🏡 Casa',
@@ -53,6 +55,8 @@ export default function App() {
   const [category, setCategory] = useState('all');
   const [subcategory, setSubcategory] = useState('all');
   const [sort, setSort] = useState('priceAsc');
+  const [publicReservations, setPublicReservations] = useState({});
+  const [giftingProduct, setGiftingProduct] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(() => {
     if (typeof window === 'undefined') return false;
     const params = new URLSearchParams(window.location.search);
@@ -89,12 +93,30 @@ export default function App() {
       }
     );
 
+    const unsubscribeReservations = subscribeToPublicReservations(
+      map => {
+        if (!active) return;
+        setPublicReservations(map);
+      }
+    );
+
     return () => {
       active = false;
       unsubscribeAuth();
       unsubscribeProducts();
+      unsubscribeReservations();
     };
   }, []);
+
+  async function handleCancelReservation(productId) {
+    const confirmed = window.confirm('Deseja realmente desfazer sua marcação neste presente?');
+    if (!confirmed) return;
+    try {
+      await cancelReservation(productId);
+    } catch (err) {
+      alert('Não foi possível cancelar: ' + (err?.message || 'Erro inesperado.'));
+    }
+  }
 
   const sourceProducts = useMemo(() => {
     // Firestore is the sole source of truth when connected and populated.
@@ -153,6 +175,7 @@ export default function App() {
             user={user}
             firestoreCount={firestoreProducts.length}
             onClose={() => setShowAdminPanel(false)}
+            products={sourceProducts}
           />
         )}
 
@@ -190,10 +213,27 @@ export default function App() {
         {error && firestoreStatus !== 'unavailable' && <p className="notice error" role="alert">{error}</p>}
 
         <section className="product-grid" aria-live="polite">
-          {visibleProducts.map(product => <ProductCard key={product.id} product={product} />)}
+          {visibleProducts.map(product => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              reservation={publicReservations[product.id]}
+              currentVisitorUid={user?.uid}
+              onOpenGift={setGiftingProduct}
+              onCancelReservation={handleCancelReservation}
+            />
+          ))}
         </section>
 
         {!loading && visibleProducts.length === 0 && <p className="empty-state">Nenhum desejo encontrado com esses filtros.</p>}
+
+        {giftingProduct && (
+          <GiftModal
+            product={giftingProduct}
+            user={user}
+            onClose={() => setGiftingProduct(null)}
+          />
+        )}
       </main>
     </div>
   );

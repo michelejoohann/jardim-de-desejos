@@ -1,17 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../firebase/config.js';
 import { migrateCatalogToFirestore } from '../services/productMigration.js';
+import { cancelReservation, subscribeToPrivateReservations } from '../services/reservationService.js';
 
 const ADMIN_UID = '7G4v3hEMtaVzI8MUDsXjVCNXGJz1';
 
-export default function AdminMigrationPanel({ user, firestoreCount, onClose }) {
+export default function AdminMigrationPanel({ user, firestoreCount, onClose, products = [] }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [reservations, setReservations] = useState([]);
+  const [reservationsLoading, setReservationsLoading] = useState(true);
+
   const isAdmin = user?.uid === ADMIN_UID;
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    setReservationsLoading(true);
+    const unsubscribe = subscribeToPrivateReservations(
+      list => {
+        setReservations(list);
+        setReservationsLoading(false);
+      },
+      () => setReservationsLoading(false)
+    );
+
+    return () => unsubscribe();
+  }, [isAdmin]);
 
   async function handleLogin(event) {
     event.preventDefault();
@@ -52,14 +71,33 @@ export default function AdminMigrationPanel({ user, firestoreCount, onClose }) {
     }
   }
 
+  async function handleCancelGift(productId, productName) {
+    const confirmed = window.confirm(
+      `Deseja realmente desmarcar o presente "${productName}"?\n\nO item voltará a ficar disponível para outros convidados.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await cancelReservation(productId);
+      setMessage(`O presente "${productName}" foi liberado.`);
+    } catch (err) {
+      setError('Não foi possível cancelar a marcação: ' + err.message);
+    }
+  }
+
+  const productsById = products.reduce((acc, item) => {
+    acc[item.id] = item;
+    return acc;
+  }, {});
+
   if (!isAdmin) {
     return (
       <section className="admin-panel" aria-labelledby="admin-title">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
           <div>
             <p className="section-kicker">Administração</p>
-            <h2 id="admin-title">Importação inicial do catálogo</h2>
-            <p>Entre com a conta administrativa criada no Firebase para liberar a migração.</p>
+            <h2 id="admin-title">Área Administrativa</h2>
+            <p>Entre com a conta da administradora para ver as mensagens e gerenciar o Jardim.</p>
           </div>
           {onClose && (
             <button
@@ -93,19 +131,84 @@ export default function AdminMigrationPanel({ user, firestoreCount, onClose }) {
   return (
     <section className="admin-panel" aria-labelledby="migration-title">
       <div>
-        <p className="section-kicker">Painel administrativo</p>
-        <h2 id="migration-title">Migrar produtos para o Firestore</h2>
-        <p>O banco possui atualmente <strong>{firestoreCount}</strong> produtos. A importação grava os itens usando IDs estáveis e não cria duplicatas.</p>
+        <p className="section-kicker">Painel da Michèlé</p>
+        <h2 id="migration-title">Gestão do Jardim & Mensagens</h2>
+        <p>O banco possui atualmente <strong>{firestoreCount}</strong> produtos cadastrados.</p>
       </div>
       <div className="admin-actions">
-        <button type="button" onClick={handleMigration} disabled={busy}>{busy ? 'Importando…' : 'Importar catálogo atual'}</button>
+        <button type="button" onClick={handleMigration} disabled={busy}>{busy ? 'Sincronizando…' : 'Sincronizar catálogo'}</button>
         <button type="button" className="secondary-button" onClick={() => signOut(auth)} disabled={busy}>Sair</button>
         {onClose && (
           <button type="button" className="secondary-button" onClick={onClose} disabled={busy}>Ocultar</button>
         )}
       </div>
+
       {message && <p className="notice success">{message}</p>}
       {error && <p className="notice error" role="alert">{error}</p>}
+
+      <div className="admin-gifts-section">
+        <div className="admin-gifts-header">
+          <h3>💌 Mensagens e Presentes Recebidos ({reservations.length})</h3>
+          <p>Veja quem marcou ou comprou presentes e leia os recados especiais deixados para você:</p>
+        </div>
+
+        {reservationsLoading && <p className="notice">Carregando mensagens com carinho…</p>}
+
+        {!reservationsLoading && reservations.length === 0 && (
+          <p className="empty-state" style={{ padding: '24px 0' }}>
+            Nenhum presente foi marcado ainda. As mensagens dos convidados aparecerão aqui em tempo real! ✨
+          </p>
+        )}
+
+        {!reservationsLoading && reservations.length > 0 && (
+          <div className="admin-gifts-list">
+            {reservations.map(res => {
+              const product = productsById[res.productId];
+              const dateStr = res.createdAt?.toDate
+                ? res.createdAt.toDate().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Recentemente';
+
+              return (
+                <article key={res.id} className="admin-gift-card">
+                  <div className="admin-gift-card-header">
+                    <div>
+                      <span className={`gift-tag ${res.status === 'received' ? 'done' : 'reserved'}`}>
+                        {res.status === 'received' ? '🌸 Já comprou' : '⏳ Vai comprar'}
+                      </span>
+                      <h4>{product?.name || res.productId}</h4>
+                      {product?.priceLabel && <span className="gift-price">{product.priceLabel}</span>}
+                    </div>
+                    <button
+                      type="button"
+                      className="text-link-button"
+                      onClick={() => handleCancelGift(res.productId, product?.name || res.productId)}
+                      title="Liberar presente de volta ao catálogo"
+                    >
+                      Liberar item ↺
+                    </button>
+                  </div>
+
+                  <div className="admin-gift-donor">
+                    <p>
+                      <strong>Quem deu:</strong> {res.isAnonymous ? '🕵️ Amigo(a) Secreto(a) (Anônimo)' : (res.name || 'Não informado')}
+                      {res.email && <span className="donor-contact"> · {res.email}</span>}
+                      <span className="donor-date"> · {dateStr}</span>
+                    </p>
+                  </div>
+
+                  {res.message ? (
+                    <blockquote className="admin-gift-message">
+                      “{res.message}”
+                    </blockquote>
+                  ) : (
+                    <p className="admin-gift-no-message">Sem mensagem de texto.</p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

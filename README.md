@@ -145,10 +145,11 @@ JardimDosDesejos/
 - 🔍 **Busca Completa**: Pesquisa textual instantânea por nome, coleção, história, sonho e descrição.
 - 💰 **Valores & Referências**: Informações de preços, condições e lojas de origem.
 - 📖 **História & Significado**: Cada presente carrega o registro do sonho e da memória associada.
-- 🎁 **Status Visual**: Controle de desejos disponíveis, reservados ou realizados ("Floresceu 🌸").
-- 🔥 **Firestore em Tempo Real**: Atualizações, edições e exclusões instantâneas via `onSnapshot`.
-- 🔐 **Painel Administrativo Sob Demanda**: Área de login e migração acessível via parâmetro `?admin=true`, mantendo a vitrine limpa e poética para os visitantes.
-- 🛡️ **Segurança Reforçada**: Regras de leitura pública e permissões de escrita restritas à administradora.
+- 🎁 **Presentear & Reservas em Tempo Real**: Visitantes podem marcar que *"Vão comprar"* ou *"Já compraram"* qualquer item diretamente no card.
+- 💌 **Mensagens de Carinho & Modo Anônimo**: Opção de se identificar (com nome e contato) ou presentear em segredo (modo anônimo), deixando uma dedicatória afetiva para a Michèlé.
+- 📬 **Gestão Privada de Presentes**: Painel administrativo sob demanda (`?admin=true`) com visualização exclusiva de todos os recados recebidos e controle de liberação de itens.
+- 🔥 **Firestore em Tempo Real**: Atualizações, edições, marcações de presentes e exclusões instantâneas via `onSnapshot`.
+- 🛡️ **Privacidade & Segurança Reforçada**: Regras granulares no Firestore garantindo que mensagens e dados de contato sejam lidos exclusivamente pela administradora.
 
 ---
 
